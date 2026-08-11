@@ -1,0 +1,41 @@
+@startuml auto-vehicle
+
+hide empty description
+skinparam linetype ortho
+
+
+[*] --> OFF
+OFF --> Manual
+Manual --> OFF
+Manual --> Autonomous
+Autonomous --> OFF
+
+state Autonomous {
+  [*] --> StandBy
+  StandBy --> Driving
+  StandBy --> Parking
+  Driving --> Parking
+  Driving --> Emergency
+  Driving --> [*]
+  Parking --> Driving
+  Parking --> Emergency
+  Parking --> [*]
+  Emergency --> [*]
+}
+
+state Driving {
+  [*] --> LaneKeeping
+  LaneKeeping --> Following
+  Following --> LaneChange
+  LaneKeeping --> LaneChange
+  LaneChange --> Intersection
+}
+
+state Parking {
+  [*] --> Searching
+  Searching --> Maneuvering
+  Maneuvering --> Parked
+  Parked --> [*]
+}
+
+@enduml
