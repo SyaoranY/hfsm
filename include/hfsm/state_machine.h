@@ -1,0 +1,5 @@
+#ifndef HFSM_STATE_MACHINE_H_
+#define HFSM_STATE_MACHINE_H_
+
+
+#endif /* HFSM_STATE_MACHINE_H_ */
