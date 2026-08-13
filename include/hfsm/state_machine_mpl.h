@@ -1,0 +1,139 @@
+#ifndef HFSM_STATE_MACHINE_MPL_H_
+#define HFSM_STATE_MACHINE_MPL_H_
+
+#include <type_traits>
+
+namespace hfsm {
+namespace mpl {
+
+template<typename... T>
+struct mp_list {
+
+};
+
+
+// mp_transform_impl
+namespace detail {
+
+template<template<typename...> class F, typename L>
+struct mp_transform_impl;
+
+template<template<typename...> class F, template<typename...> class L, typename... T>
+struct mp_transform_impl<F, L<T...>> {
+  using type = L<F<T>...>;
+};
+
+} // namespace detail
+
+template<template<typename...> class F, typename L>
+using mp_transform = typename detail::mp_transform_impl<F, L>::type;
+
+
+// mp_apply_impl
+namespace detail {
+
+template<template<typename...> class F, typename L>
+struct mp_apply_impl;
+
+template<template<typename...> class F, template<typename...> class L, typename... T>
+struct mp_apply_impl<F, L<T...>> {
+  using type = F<T...>;
+};
+
+} // namespace detail
+
+template<template<typename...> class F, typename L>
+using mp_apply = typename detail::mp_apply_impl<F, L>::type;
+
+
+// mp_set_contains_impl
+namespace detail {
+
+template<typename L, typename T>
+struct mp_set_contains_impl;
+
+template<template<typename...> class L, typename T>
+struct mp_set_contains_impl<L<>, T> : std::false_type { 
+
+};
+
+template<template<typename...> class L, typename U1, typename... U, typename T>
+struct mp_set_contains_impl<L<U1, U...>, T> : std::conditional_t<std::is_same<U1, T>::value,
+                                                                 std::true_type,
+                                                                 mp_set_contains_impl<L<U...>, T>> {
+   
+};
+
+} // namespace detail
+
+template<typename L, typename T>
+using mp_set_contains = typename detail::mp_set_contains_impl<L, T>::type;
+
+
+// mp_set_push_back_impl
+namespace detail {
+
+template<typename L, typename... T>
+struct mp_set_push_back_impl;
+
+template<template<typename...> class L, typename... U>
+struct mp_set_push_back_impl<L<U...>> {
+  using type = L<U...>;
+};
+
+template<template<typename...> class L, typename... U, typename T1, typename... T>
+struct mp_set_push_back_impl<L<U...>, T1, T...> {
+  using S = std::conditional_t<mp_set_contains<L<U...>, T1>::value, L<U...>, L<U..., T1>>;
+  using type = typename mp_set_push_back_impl<S, T...>::type;
+};
+
+} // namespace detail
+
+template<typename L, typename... T>
+using mp_set_push_back = typename detail::mp_set_push_back_impl<L, T...>::type;
+
+// mp_set_union_impl
+namespace detail {
+
+template<typename... L>
+struct mp_set_union_impl;
+
+template<template<typename...> class L, typename... T>
+struct mp_set_union_impl<L<T...>> {
+  using type = L<T...>;
+};
+
+template<template<typename...> class L1, typename... U1,
+         template<typename...> class L2, typename... U2,
+         typename... L>
+struct mp_set_union_impl<L1<U1...>, L2<U2...>, L...> {
+  using S = mp_set_push_back<L1<U1...>, U2...>;
+  using type = typename mp_set_union_impl<S, L...>::type;
+};
+
+} // namespace detail
+
+template<typename... L>
+using mp_set_union = typename detail::mp_set_union_impl<L...>::type;
+
+// mp_unique_impl
+namespace detail {
+
+template<typename L>
+struct mp_unique_impl;
+
+template<template<typename...> class L, typename... T>
+struct mp_unique_impl<L<T...>> {
+  using type = mp_set_push_back<L<>, T...>;
+};
+
+} // namespace detail
+
+template<typename L>
+using mp_unique = typename detail::mp_unique_impl<L>::type;
+
+
+} // namespace mpl
+} // namespace hfsm
+
+#endif /* HFSM_STATE_MACHINE_MPL_H_ */
