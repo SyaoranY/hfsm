@@ -6,6 +6,8 @@
 namespace hfsm {
 namespace mpl {
 
+template<typename...> using mp_void = void;
+
 template<typename... T>
 struct mp_list {
 
