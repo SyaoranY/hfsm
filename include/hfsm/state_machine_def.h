@@ -1,6 +1,7 @@
 #ifndef HFSM_STATE_MACHINE_DEF_H_
 #define HFSM_STATE_MACHINE_DEF_H_
 
+#include <type_traits>
 #include <hfsm/state_machine_mpl.h>
 
 namespace hfsm {
@@ -65,6 +66,9 @@ struct state_machine_def {
   template<typename State, EnumClass EnumValue>
   using state_ref = detail::state_ref<State, EnumClass, EnumValue>;
 
+  // transition runtime entry type
+  using transition_entry_t = std::tuple<enum_type, enum_type, guard_type, action_type>;
+
   template<typename source, typename target, guard_type guard_value, action_type action_value>
   struct transition {
     static_assert(detail::is_state_ref<source>::value, "the transition's first template argument must be a state_ref type");
@@ -74,10 +78,8 @@ struct state_machine_def {
     using target_state_ref_t = target;
     using source_state = typename source_state_ref_t::value_type;
     using target_state = typename target_state_ref_t::value_type;
-
-    using entry_type = std::tuple<enum_type, enum_type, guard_type, action_type>;
     
-    static constexpr auto make_transition_entry() -> entry_type {
+    static constexpr transition_entry_t make_transition_entry() {
       constexpr auto source_state_enum_value = source_state_ref_t::enum_value;
       constexpr auto target_state_enum_value = target_state_ref_t::enum_value;
       return {source_state_enum_value, target_state_enum_value, guard_value, action_value};
@@ -85,6 +87,19 @@ struct state_machine_def {
   };
 };
 
+namespace detail {
+
+template<typename T>
+class is_derived_from_state_machine_def {
+ private:
+  template<typename Derived, typename EnumClass>
+  static std::true_type test(state_machine_def<Derived, EnumClass> const&);
+  static std::false_type test(...);
+ public:
+  static constexpr bool value = decltype(test(std::declval<T>()))::value;
+};
+
+} // namespace
 
 } // namespace hfsm
 
