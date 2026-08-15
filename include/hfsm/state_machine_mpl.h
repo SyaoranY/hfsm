@@ -11,6 +11,22 @@ struct mp_list {
 
 };
 
+// mp_size_impl
+namespace detail {
+
+template<typename L>
+struct mp_size_impl;
+
+template<template<typename...> class L, typename... T>
+struct mp_size_impl<L<T...>> {
+  using type = std::integral_constant<std::size_t, sizeof...(T)>;
+};
+
+} // namespace detail
+
+template<typename L>
+using mp_size = typename detail::mp_size_impl<L>::type;
+
 
 // mp_transform_impl
 namespace detail {
@@ -44,6 +60,28 @@ struct mp_apply_impl<F, L<T...>> {
 
 template<template<typename...> class F, typename L>
 using mp_apply = typename detail::mp_apply_impl<F, L>::type;
+
+namespace detail {
+
+template<typename... L>
+struct mp_append_impl;
+
+template<template<typename...> class L, typename... T>
+struct mp_append_impl<L<T...>> {
+  using type = L<T...>;
+};
+
+template<template<typename...> class L1, typename... T1, 
+         template<typename...> class L2, typename... T2,
+         typename... L> 
+struct mp_append_impl<L1<T1...>, L2<T2...>, L...> {
+  using type = typename mp_append_impl<L1<T1..., T2...>, L...>::type;
+};
+
+} // namespace detail
+
+template<typename... L>
+using mp_append = typename detail::mp_append_impl<L...>::type;
 
 
 // mp_set_contains_impl

@@ -10,6 +10,18 @@ TEST(hfsm_mpl, mp_list) {
   using L3 = mp_list<int, int, double>;
 }
 
+TEST(hfsm_mpl, mp_size) {
+  using hfsm::mpl::mp_list;
+  using hfsm::mpl::mp_size;
+  using L1 = mp_list<>;
+  using L2 = mp_list<int>;
+  using L3 = mp_list<int, int, double>;
+  static_assert(mp_size<L1>::value == 0);
+  static_assert(mp_size<L2>::value == 1);
+  static_assert(mp_size<L3>::value == 3);
+}
+
+
 TEST(hfsm_mpl, mp_set_contains) {
   using hfsm::mpl::mp_list;
   using hfsm::mpl::mp_set_contains;
@@ -92,4 +104,18 @@ TEST(hfsm_mpl, mp_apply) {
   static_assert(std::is_same<L4, std::tuple<>>::value);
   static_assert(std::is_same<L5, std::tuple<int>>::value);
   static_assert(std::is_same<L6, std::tuple<int, double, float>>::value);
+}
+
+TEST(hfsm_mpl, mp_append) {
+  using hfsm::mpl::mp_list;
+  using hfsm::mpl::mp_append;
+  using L1 = mp_list<>;
+  using L2 = mp_list<int>;
+  using L3 = mp_list<int, double, float>;
+  using L4 = mp_append<L1, L2>;
+  static_assert(std::is_same<L4, mp_list<int>>::value);
+  using L5 = mp_append<L2, L3>;
+  static_assert(std::is_same<L5, mp_list<int, int, double, float>>::value);
+  using L6 = mp_append<std::tuple<>, L1, L2, L3>;
+  static_assert(std::is_same<L6, std::tuple<int, int, double, float>>::value);
 }
