@@ -173,6 +173,37 @@ template<typename L>
 using mp_unique = typename detail::mp_unique_impl<L>::type;
 
 
+template<std::size_t I = 0,
+         typename Tuple,
+         typename Pred,
+         typename Func>
+auto tuple_visit_if(Tuple&, Pred&&, Func&&) 
+    -> std::enable_if_t<I == std::tuple_size<Tuple>::value, bool> {
+  return false;
+}
+
+template<std::size_t I = 0,
+         typename Tuple,
+         typename Pred,
+         typename Func>
+auto tuple_visit_if(Tuple& tuple, Pred&& pred, Func&& func)
+    -> std::enable_if_t<I < std::tuple_size<Tuple>::value, bool> {
+  auto& value = std::get<I>(tuple);
+
+  if (pred(value)) {
+    func(value);
+    return true;
+  }
+
+  return tuple_visit_if<I + 1>(
+      tuple,
+      std::forward<Pred>(pred),
+      std::forward<Func>(func)
+  );
+}
+
+
+
 } // namespace mpl
 } // namespace hfsm
 

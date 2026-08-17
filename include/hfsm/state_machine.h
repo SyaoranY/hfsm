@@ -11,6 +11,7 @@ template<typename StateMachineDef>
 class state_machine {
   static_assert(detail::is_derived_from_state_machine_def<StateMachineDef>::value, "StateMachineDef must be derived from state_machine_def");
  public:
+  using state_flag  = state_machine_backend_tag;
   using enum_type = typename StateMachineDef::enum_type;
   using guard_type = typename StateMachineDef::guard_type;
   using action_type = typename StateMachineDef::action_type;
@@ -19,23 +20,47 @@ class state_machine {
   static constexpr std::size_t tt_size = hfsm::mpl::mp_size<transition_table>::value;
   using transition_entries_t = std::array<transition_entry_t, tt_size>;
 
+  // as a sub state machine
+  void on_entry() {
+    state_machine_def_.on_entry();
+    do_sub_state_entry(current_);
+  }
+
+  // as a sub state machine
+  void on_exit() {
+    do_sub_state_exit(current_);
+    state_machine_def_.on_exit();
+    current_ = StateMachineDef::initial_state::enum_value;
+  }
+
+  // as a sub state machine
+  void on_update() {
+    state_machine_def_.on_update();
+    step();
+  }
+
+
+
 //  private:
   template<template<typename...> class L, typename... Trans>
-  constexpr auto construct_transition_entries(L<Trans...>*) -> transition_entries_t {
+  static constexpr auto construct_transition_entries(L<Trans...>*) -> transition_entries_t {
     return {Trans::make_transition_entry()...};
   }
 
-  template<typename State, typename Tag = typename State::state_flag>
+  template<typename StateEntry, typename Tag = typename StateEntry::state_flag>
   struct sub_state_transform;
 
-  template<typename State>
-  struct sub_state_transform<State, normal_state_tag> {
-    using type = State;
+  template<typename StateEntry>
+  struct sub_state_transform<StateEntry, normal_state_tag> {
+    using type = StateEntry;
   };
 
-  template<typename State>
-  struct sub_state_transform<State, state_machine_tag> {
-    using type = state_machine<State>;
+  template<typename StateEntry>
+  struct sub_state_transform<StateEntry, state_machine_frontend_tag> {
+    using state_type = typename StateEntry::value_type;
+    using enum_type = typename StateEntry::enum_type;
+    static constexpr enum_type enum_value = StateEntry::enum_value;
+    using type = detail::state_entry<state_machine<state_type>, enum_type, enum_value>;
   };
 
   template<typename State>
@@ -46,13 +71,62 @@ class state_machine {
 
   template<template<typename...> class L, typename... Trans>
   struct sub_states_list<L<Trans...>> {
-    using source_state_list = hfsm::mpl::mp_list<typename Trans::source_state...>;
-    using target_state_list = hfsm::mpl::mp_list<typename Trans::target_state...>;
+    using source_state_list = hfsm::mpl::mp_list<typename Trans::source_state_entry_t...>;
+    using target_state_list = hfsm::mpl::mp_list<typename Trans::target_state_entry_t...>;
     using state_list = hfsm::mpl::mp_set_union<hfsm::mpl::mp_list<>, source_state_list, target_state_list>;
     using type = hfsm::mpl::mp_apply<std::tuple, hfsm::mpl::mp_transform<sub_state_transform_t, state_list>>;
   };
 
   using sub_states_list_t = typename sub_states_list<transition_table>::type;
+
+  void step() {
+    transition_entry_t trans;
+    if (find_available_transition(trans)) {
+      do_transition(trans);
+    } else {
+      do_sub_state_update();
+    }
+  }
+
+  bool find_available_transition(transition_entry_t& trans) {
+    for (auto const& trans_entry : transitions) {
+      if (trans_entry.source == current_ && (state_machine_def_.*trans_entry.guard)()) {
+        trans = trans_entry;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void do_transition(transition_entry_t const& trans) {
+    do_sub_state_exit(trans.source);
+    (state_machine_def_.*trans.action)();
+    do_sub_state_entry(trans.target);
+  }
+
+  void do_sub_state_exit(enum_type const source) {
+    hfsm::mpl::tuple_visit_if(
+        sub_states_,
+        [source](auto const& state_entry) { return state_entry.enum_value == source; },
+        [](auto& state_entry) { state_entry.on_exit(); }
+    );
+  }
+
+  void do_sub_state_entry(enum_type const target) {
+    hfsm::mpl::tuple_visit_if(
+        sub_states_,
+        [target](auto const& state_entry) { return state_entry.enum_value == target; },
+        [](auto& state_entry) { state_entry.on_entry(); }
+    );
+  }
+
+  void do_sub_state_update() {
+    hfsm::mpl::tuple_visit_if(
+        sub_states_,
+        [current = current_](auto const& state_entry) { return state_entry.enum_value == current; },
+        [](auto& state_entry) { state_entry.on_update(); }
+    );
+  }
 
   static constexpr transition_entries_t transitions = construct_transition_entries(static_cast<transition_table*>(nullptr));
 
@@ -87,6 +161,7 @@ class state_machine {
 /**
  * 五、状态机的对象保存
  * 
+ * 六、支持伪状态
  */
 
 } // namespace hfsm
