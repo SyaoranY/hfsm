@@ -3,6 +3,13 @@
 #include <tuple>
 #include <vector>
 
+TEST(hfsm_mpl, mp_void) {
+  using hfsm::mpl::mp_void;
+  using L1 = mp_void<>;
+  using L2 = mp_void<int>;
+  using L3 = mp_void<int, int, double>;
+}
+
 TEST(hfsm_mpl, mp_list) {
   using hfsm::mpl::mp_list;
   using L1 = mp_list<>;
@@ -16,11 +23,55 @@ TEST(hfsm_mpl, mp_size) {
   using L1 = mp_list<>;
   using L2 = mp_list<int>;
   using L3 = mp_list<int, int, double>;
+  using L4 = std::tuple<int, int, double>;
   static_assert(mp_size<L1>::value == 0);
   static_assert(mp_size<L2>::value == 1);
   static_assert(mp_size<L3>::value == 3);
+  static_assert(mp_size<L4>::value == 3);
 }
 
+TEST(hfsm_mpl, mp_transform) {
+  using hfsm::mpl::mp_list;
+  using hfsm::mpl::mp_transform;
+
+  using L1 = mp_list<>;
+  using L2 = mp_list<int>;
+  using L3 = mp_list<int, double, float>;
+  using L4 = mp_transform<std::add_pointer_t, L1>;
+  using L5 = mp_transform<std::add_pointer_t, L2>;
+  using L6 = mp_transform<std::add_pointer_t, L3>;
+  static_assert(std::is_same<L4, mp_list<>>::value);
+  static_assert(std::is_same<L5, mp_list<int*>>::value);
+  static_assert(std::is_same<L6, mp_list<int*, double*, float*>>::value);
+}
+
+TEST(hfsm_mpl, mp_apply) {
+  using hfsm::mpl::mp_list;
+  using hfsm::mpl::mp_apply;
+  using L1 = mp_list<>;
+  using L2 = mp_list<int>;
+  using L3 = mp_list<int, double, float>;
+  using L4 = mp_apply<std::tuple, L1>;
+  using L5 = mp_apply<std::tuple, L2>;
+  using L6 = mp_apply<std::tuple, L3>;
+  static_assert(std::is_same<L4, std::tuple<>>::value);
+  static_assert(std::is_same<L5, std::tuple<int>>::value);
+  static_assert(std::is_same<L6, std::tuple<int, double, float>>::value);
+}
+
+TEST(hfsm_mpl, mp_append) {
+  using hfsm::mpl::mp_list;
+  using hfsm::mpl::mp_append;
+  using L1 = mp_list<>;
+  using L2 = mp_list<int>;
+  using L3 = mp_list<int, double, float>;
+  using L4 = mp_append<L1, L2>;
+  static_assert(std::is_same<L4, mp_list<int>>::value);
+  using L5 = mp_append<L2, L3>;
+  static_assert(std::is_same<L5, mp_list<int, int, double, float>>::value);
+  using L6 = mp_append<std::tuple<>, L1, L2, L3>;
+  static_assert(std::is_same<L6, std::tuple<int, int, double, float>>::value);
+}
 
 TEST(hfsm_mpl, mp_set_contains) {
   using hfsm::mpl::mp_list;
@@ -77,45 +128,82 @@ TEST(hfsm_mpl, mp_unique) {
   static_assert(std::is_same<L5, mp_list<int>>::value);
 }
 
-TEST(hfsm_mpl, mp_transform) {
-  using hfsm::mpl::mp_list;
-  using hfsm::mpl::mp_transform;
+TEST(hfsm_mpl, tuple_visit_if) {
+  using hfsm::mpl::tuple_visit_if;
+  { // visits first matched element
+    std::tuple<int, double, char> tuple{1, 2.5, 'a'};
 
-  using L1 = mp_list<>;
-  using L2 = mp_list<int>;
-  using L3 = mp_list<int, double, float>;
-  using L4 = mp_transform<std::add_pointer_t, L1>;
-  using L5 = mp_transform<std::add_pointer_t, L2>;
-  using L6 = mp_transform<std::add_pointer_t, L3>;
-  static_assert(std::is_same<L4, mp_list<>>::value);
-  static_assert(std::is_same<L5, mp_list<int*>>::value);
-  static_assert(std::is_same<L6, mp_list<int*, double*, float*>>::value);
-}
+    bool visited = false;
 
-TEST(hfsm_mpl, mp_apply) {
-  using hfsm::mpl::mp_list;
-  using hfsm::mpl::mp_apply;
-  using L1 = mp_list<>;
-  using L2 = mp_list<int>;
-  using L3 = mp_list<int, double, float>;
-  using L4 = mp_apply<std::tuple, L1>;
-  using L5 = mp_apply<std::tuple, L2>;
-  using L6 = mp_apply<std::tuple, L3>;
-  static_assert(std::is_same<L4, std::tuple<>>::value);
-  static_assert(std::is_same<L5, std::tuple<int>>::value);
-  static_assert(std::is_same<L6, std::tuple<int, double, float>>::value);
-}
+    const bool found = tuple_visit_if(
+        tuple,
+        [](auto const& value) {
+            return std::is_same<
+                typename std::decay<decltype(value)>::type,
+                double
+            >::value;
+        },
+        [&](auto& value) {
+            visited = true;
+            EXPECT_DOUBLE_EQ(value, 2.5);
+        });
 
-TEST(hfsm_mpl, mp_append) {
-  using hfsm::mpl::mp_list;
-  using hfsm::mpl::mp_append;
-  using L1 = mp_list<>;
-  using L2 = mp_list<int>;
-  using L3 = mp_list<int, double, float>;
-  using L4 = mp_append<L1, L2>;
-  static_assert(std::is_same<L4, mp_list<int>>::value);
-  using L5 = mp_append<L2, L3>;
-  static_assert(std::is_same<L5, mp_list<int, int, double, float>>::value);
-  using L6 = mp_append<std::tuple<>, L1, L2, L3>;
-  static_assert(std::is_same<L6, std::tuple<int, int, double, float>>::value);
+    EXPECT_TRUE(found);
+    EXPECT_TRUE(visited);
+  }
+  { // returns false when no element matches
+    std::tuple<int, double, char> tuple{1, 2.5, 'a'};
+
+    bool visited = false;
+
+    const bool found = tuple_visit_if(
+        tuple,
+        [](auto const&) {
+            return false;
+        },
+        [&](auto&) {
+            visited = true;
+        });
+
+    EXPECT_FALSE(found);
+    EXPECT_FALSE(visited);
+  }
+  { // stop after first match
+    std::tuple<int, int, int> tuple{1, 2, 3};
+
+    int predicate_count = 0;
+    int visit_count = 0;
+
+    const bool found = tuple_visit_if(
+        tuple,
+        [&](int value) {
+            ++predicate_count;
+            return value == 2;
+        },
+        [&](int& value) {
+            ++visit_count;
+            EXPECT_EQ(value, 2);
+        });
+
+    EXPECT_TRUE(found);
+    EXPECT_EQ(predicate_count, 2);
+    EXPECT_EQ(visit_count, 1);
+  }
+  { // can modify matched element
+    std::tuple<int, int, int> tuple{1, 2, 3};
+
+    const bool found = tuple_visit_if(
+        tuple,
+        [](int value) {
+            return value == 2;
+        },
+        [](int& value) {
+            value = 20;
+        });
+
+    EXPECT_TRUE(found);
+    EXPECT_EQ(std::get<0>(tuple), 1);
+    EXPECT_EQ(std::get<1>(tuple), 20);
+    EXPECT_EQ(std::get<2>(tuple), 3);
+  }
 }
