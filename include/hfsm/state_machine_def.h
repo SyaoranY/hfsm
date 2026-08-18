@@ -34,7 +34,7 @@ template<typename State, typename EnumClass, EnumClass EnumValue>
 struct state_entry : public State {
   static_assert(detail::is_state<State>::value, "State must be a type representing a state or sub state machine");
   static_assert(std::is_enum<EnumClass>::value, "EnumClass must be an enum type");
-  using value_type = State;
+  using state_type = State;
   using enum_type = EnumClass;
   static constexpr EnumClass enum_value = EnumValue;
 };
@@ -78,8 +78,8 @@ struct state_machine_def {
 
     using source_state_entry_t = source;
     using target_state_entry_t = target;
-    // using source_state = typename source_state_entry_t::value_type;
-    // using target_state = typename target_state_entry_t::value_type;
+    // using source_state = typename source_state_entry_t::state_type;
+    // using target_state = typename target_state_entry_t::state_type;
     
     static constexpr transition_entry_t make_transition_entry() {
       constexpr auto source_state_enum_value = source_state_entry_t::enum_value;

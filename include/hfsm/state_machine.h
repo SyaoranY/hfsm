@@ -24,6 +24,8 @@ class state_machine {
 
   // as a sub state machine
   void on_entry() {
+    is_started_ = true;
+    current_ = initial_state::enum_value;
     state_machine_def_.on_entry();
     do_sub_state_entry(current_);
   }
@@ -59,7 +61,7 @@ class state_machine {
 
   template<typename StateEntry>
   struct sub_state_transform<StateEntry, state_machine_frontend_tag> {
-    using state_type = typename StateEntry::value_type;
+    using state_type = typename StateEntry::state_type;
     using enum_type = typename StateEntry::enum_type;
     static constexpr enum_type enum_value = StateEntry::enum_value;
     using type = detail::state_entry<state_machine<state_type>, enum_type, enum_value>;
@@ -73,10 +75,10 @@ class state_machine {
 
   template<template<typename...> class L, typename... Trans>
   struct sub_states_list<L<Trans...>> {
-    using source_state_list = hfsm::mpl::mp_list<typename Trans::source_state_entry_t...>;
-    using target_state_list = hfsm::mpl::mp_list<typename Trans::target_state_entry_t...>;
-    using state_list = hfsm::mpl::mp_set_union<hfsm::mpl::mp_list<>, source_state_list, target_state_list>;
-    using type = hfsm::mpl::mp_apply<std::tuple, hfsm::mpl::mp_transform<sub_state_transform_t, state_list>>;
+    using source_state_entry_list = hfsm::mpl::mp_list<typename Trans::source_state_entry_t...>;
+    using target_state_entry_list = hfsm::mpl::mp_list<typename Trans::target_state_entry_t...>;
+    using state_entry_list = hfsm::mpl::mp_set_union<hfsm::mpl::mp_list<>, source_state_entry_list, target_state_entry_list>;
+    using type = hfsm::mpl::mp_apply<std::tuple, hfsm::mpl::mp_transform<sub_state_transform_t, state_entry_list>>;
   };
 
   using sub_states_list_t = typename sub_states_list<transition_table>::type;
@@ -103,6 +105,24 @@ class state_machine {
   }
 
   enum_type current_state() const noexcept { return current_; }
+
+  // std::is_same<U::state_value, T>::value
+
+  template<typename State>
+  struct state_match {
+    template<typename StateEntry>
+    using pred = hfsm::mpl::mp_bool<
+                          std::is_same<typename StateEntry::state_type, State>::value || 
+                          std::is_same<typename StateEntry::state_type, state_machine<State>>::value>;
+  };
+
+  template<typename T>
+  auto& get_state() {
+    constexpr size_t index = hfsm::mpl::mp_find_if<sub_states_list_t, state_match<T>::template pred>::value;
+    // constexpr size_t index = hfsm::mpl::mp_find<sub_states_list_t, sub_state_transform_t<T>>::value;
+    return std::get<index>(sub_states_);
+  }
+  // std::tuple<state_entry<St>, state_entry<state_machine<T>>>
 
   bool find_available_transition(transition_entry_t& trans) {
     for (auto const& trans_entry : transitions_) {

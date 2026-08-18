@@ -88,6 +88,61 @@ struct mp_append_impl<L1<T1...>, L2<T2...>, L...> {
 template<typename... L>
 using mp_append = typename detail::mp_append_impl<L...>::type;
 
+// mp_find_impl
+namespace detail {
+
+template<typename L, typename T>
+struct mp_find_impl;
+
+template<template<typename...> class L, typename T>
+struct mp_find_impl<L<>, T> {
+  using type = std::integral_constant<std::size_t, 0>;  
+};
+
+constexpr std::size_t cx_find_index(bool const * first, bool const * last) {
+  std::size_t m = 0;
+  while(first != last && !*first) {
+    ++m;
+    ++first;
+  }
+  return m;
+}
+
+template<template<typename...> class L, typename... U, typename T>
+struct mp_find_impl<L<U...>, T> {
+  static constexpr bool _v[] = {std::is_same<T, U>::value...};
+  using type = std::integral_constant<std::size_t, cx_find_index(_v, _v + sizeof...(U))>;
+};
+
+} // namespace detail
+
+template<typename L, typename T>
+using mp_find = typename detail::mp_find_impl<L, T>::type;
+
+// mp_find_if_impl
+namespace detail {
+
+template<typename L, template<typename...> class P>
+struct mp_find_if_impl;
+
+template<template<typename...> class L, template<typename...> class P>
+struct mp_find_if_impl<L<>, P> {
+  using type = std::integral_constant<std::size_t, 0>;  
+};
+
+
+template<template<typename...> class L, typename... T, template<typename...> class P>
+struct mp_find_if_impl<L<T...>, P> {
+  static constexpr bool _v[] = {P<T>::value...};
+  using type = std::integral_constant<std::size_t, cx_find_index(_v, _v + sizeof...(T))>;
+};
+
+
+} // namespace detail 
+
+template<typename L, template<typename...> class P>
+using mp_find_if = typename detail::mp_find_if_impl<L, P>::type;
+
 
 // mp_set_contains_impl
 namespace detail {

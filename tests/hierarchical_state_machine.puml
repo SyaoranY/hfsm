@@ -1,0 +1,35 @@
+@startuml auto-vehicle
+
+hide empty description
+
+[*] --> Off
+
+Off --> Manual : power_on / start_manual
+
+Manual --> Autonomous : engage_autonomous / start_autonomous
+Autonomous --> Manual : disengage_autonomous / stop_autonomous
+
+Manual --> Emergency : system_fault / enter_emergency
+Autonomous --> Emergency : system_fault / enter_emergency
+
+Emergency --> Off : reset_requested / reset_vehicle
+
+
+state Autonomous {
+    [*] --> Standby
+
+    Standby --> Cruising : autonomous_ready / start_cruising
+
+    Cruising --> Following : vehicle_ahead / start_following
+    Following --> Cruising : road_clear / resume_cruising
+
+    Cruising --> LaneChanging : lane_change_requested / start_lane_change
+    LaneChanging --> Cruising : lane_change_completed / finish_lane_change
+
+    Cruising --> Parking : parking_requested / start_parking
+    Following --> Parking : parking_requested / start_parking
+
+    Parking --> Standby : parking_completed / finish_parking
+}
+
+@enduml
