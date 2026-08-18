@@ -8,13 +8,20 @@ TEST(hfsm_mpl, mp_void) {
   using L1 = mp_void<>;
   using L2 = mp_void<int>;
   using L3 = mp_void<int, int, double>;
+  static_assert(std::is_same<L1, void>::value);
+  static_assert(std::is_same<L2, void>::value);
+  static_assert(std::is_same<L3, void>::value);
 }
 
 TEST(hfsm_mpl, mp_list) {
   using hfsm::mpl::mp_list;
+  using hfsm::mpl::mp_size;
   using L1 = mp_list<>;
   using L2 = mp_list<int>;
   using L3 = mp_list<int, int, double>;
+  static_assert(mp_size<L1>::value == 0);
+  static_assert(mp_size<L2>::value == 1);
+  static_assert(mp_size<L3>::value == 3);  
 }
 
 TEST(hfsm_mpl, mp_size) {

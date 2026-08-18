@@ -19,11 +19,19 @@ if (BUILD_TESTING)
   )
   FetchContent_MakeAvailable(googletest)
 
-  add_executable(test_hfsm)
-  target_sources(test_hfsm PRIVATE tests/test_hfsm.cpp)
-  target_compile_options(test_hfsm PRIVATE -Wall -Wextra -Wpedantic -Werror -O2 -g)
-  target_link_libraries(test_hfsm PRIVATE hfsm GTest::gtest_main)
-
   include(GoogleTest)
-  gtest_discover_tests(test_hfsm)
+
+  function(add_hfsm_test target)
+    add_executable(${target})
+    target_sources(${target} PRIVATE ${ARGN})
+    target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Werror -O2 -g)
+    target_link_libraries(${target} PRIVATE hfsm GTest::gtest_main)
+    gtest_discover_tests(${target})
+  endfunction()
+
+  add_hfsm_test(test_hfsm_mpl tests/test_hfsm_mpl.cpp)
+  add_hfsm_test(test_hierarchical_state_machine tests/test_hierarchical_state_machine.cpp)
+  add_hfsm_test(test_simple_single_level_state_machine tests/test_simple_single_level_state_machine.cpp)
+  add_hfsm_test(test_three_level_state_machine tests/test_three_level_state_machine.cpp)
+  
 endif()
