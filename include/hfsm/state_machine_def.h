@@ -62,14 +62,12 @@ struct state_machine_def {
   void on_update() { }
   void on_exit() { }
 
-  // transition runtime entry type
   struct transition_entry_t {
     enum_type source;
     enum_type target;
     guard_type guard;
     action_type action;
   };
-  // using transition_entry_t = std::tuple<enum_type, enum_type, guard_type, action_type>;
 
   template<typename source, typename target, guard_type guard_value, action_type action_value>
   struct transition {
@@ -78,8 +76,6 @@ struct state_machine_def {
 
     using source_state_entry_t = source;
     using target_state_entry_t = target;
-    // using source_state = typename source_state_entry_t::state_type;
-    // using target_state = typename target_state_entry_t::state_type;
     
     static constexpr transition_entry_t make_transition_entry() {
       constexpr auto source_state_enum_value = source_state_entry_t::enum_value;

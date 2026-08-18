@@ -22,6 +22,39 @@ class state_machine {
   static constexpr std::size_t tt_size = hfsm::mpl::mp_size<transition_table>::value;
   using transition_entries_t = std::array<transition_entry_t, tt_size>;
 
+  void start() {
+    if (is_started_) {
+      throw std::logic_error("start() cannot be called twice");
+    }
+    is_started_ = true;
+    current_ = initial_state::enum_value;
+    on_entry();
+  }
+  
+  void step() {
+    if (!is_started_) {
+      throw std::logic_error("step() cannot be called before start()");
+    }
+    transition_entry_t trans;
+    if (find_available_transition(trans)) {
+      do_transition(trans);
+    } else {
+      do_sub_state_update();
+    }
+  }
+
+  enum_type current_state() const noexcept { return current_; }
+
+  template<typename T>
+  auto& get_state() {
+    constexpr size_t index = hfsm::mpl::mp_find_if<sub_states_list_t, state_match<T>::template pred>::value;
+    return std::get<index>(sub_states_);
+  }
+
+ private:
+
+  template<typename SubStateMachineDef> friend class state_machine;
+  
   // as a sub state machine
   void on_entry() {
     is_started_ = true;
@@ -43,9 +76,6 @@ class state_machine {
     step();
   }
 
-
-
-//  private:
   template<template<typename...> class L, typename... Trans>
   static constexpr auto construct_transition_entries(L<Trans...>*) -> transition_entries_t {
     return {Trans::make_transition_entry()...};
@@ -83,31 +113,6 @@ class state_machine {
 
   using sub_states_list_t = typename sub_states_list<transition_table>::type;
 
-  void start() {
-    if (is_started_) {
-      throw std::logic_error("start() cannot be called twice");
-    }
-    is_started_ = true;
-    current_ = initial_state::enum_value;
-    on_entry();
-  }
-  
-  void step() {
-    if (!is_started_) {
-      throw std::logic_error("step() cannot be called before start()");
-    }
-    transition_entry_t trans;
-    if (find_available_transition(trans)) {
-      do_transition(trans);
-    } else {
-      do_sub_state_update();
-    }
-  }
-
-  enum_type current_state() const noexcept { return current_; }
-
-  // std::is_same<U::state_value, T>::value
-
   template<typename State>
   struct state_match {
     template<typename StateEntry>
@@ -115,14 +120,6 @@ class state_machine {
                           std::is_same<typename StateEntry::state_type, State>::value || 
                           std::is_same<typename StateEntry::state_type, state_machine<State>>::value>;
   };
-
-  template<typename T>
-  auto& get_state() {
-    constexpr size_t index = hfsm::mpl::mp_find_if<sub_states_list_t, state_match<T>::template pred>::value;
-    // constexpr size_t index = hfsm::mpl::mp_find<sub_states_list_t, sub_state_transform_t<T>>::value;
-    return std::get<index>(sub_states_);
-  }
-  // std::tuple<state_entry<St>, state_entry<state_machine<T>>>
 
   bool find_available_transition(transition_entry_t& trans) {
     for (auto const& trans_entry : transitions_) {
