@@ -1,0 +1,30 @@
+@startuml three-level-state-machine
+
+hide empty description
+
+' skinparam linetype ortho
+' skinparam ranksep 80
+' skinparam nodesep 100
+
+state Level1Machine {
+
+    [*] --> Level2Machine
+
+    state Level2Machine {
+
+        [*] --> Level3Machine
+
+        state Level3Machine {
+
+            [*] --> Idle
+
+            Idle --> Running : start_running / on_start_running
+        }
+
+        Level3Machine --> Level2Done : finish / on_finish
+    }
+
+    Level2Machine --> Level1Done : finish / on_finish
+}
+
+@enduml
