@@ -2,11 +2,14 @@
 #define HFSM_STATE_MACHINE_MPL_H_
 
 #include <type_traits>
+#include <tuple>
 
 namespace hfsm {
 namespace mpl {
 
 template<typename...> using mp_void = void;
+
+template<bool B> using mp_bool = std::integral_constant<bool, B>;
 
 template<typename... T>
 struct mp_list {

@@ -25,7 +25,7 @@ struct is_state : std::false_type { };
 
 template<typename State>
 struct is_state<State, hfsm::mpl::mp_void<typename State::state_flag>> 
-: std::bool_constant<std::is_same<typename State::state_flag, normal_state_tag>::value
+: hfsm::mpl::mp_bool<std::is_same<typename State::state_flag, normal_state_tag>::value
                   || std::is_same<typename State::state_flag, state_machine_frontend_tag>::value
                   || std::is_same<typename State::state_flag, state_machine_backend_tag>::value> {
 };

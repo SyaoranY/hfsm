@@ -102,8 +102,10 @@ class state_machine {
     }
   }
 
+  enum_type current_state() const noexcept { return current_; }
+
   bool find_available_transition(transition_entry_t& trans) {
-    for (auto const& trans_entry : transitions) {
+    for (auto const& trans_entry : transitions_) {
       if (trans_entry.source == current_ && (state_machine_def_.*trans_entry.guard)()) {
         trans = trans_entry;
         return true;
@@ -116,6 +118,7 @@ class state_machine {
     do_sub_state_exit(trans.source);
     (state_machine_def_.*trans.action)();
     do_sub_state_entry(trans.target);
+    current_ = trans.target;
   }
 
   void do_sub_state_exit(enum_type const source) {
@@ -142,12 +145,11 @@ class state_machine {
     );
   }
 
-  static constexpr transition_entries_t transitions = construct_transition_entries(static_cast<transition_table*>(nullptr));
-
   bool is_started_ = false;
   enum_type current_;
   StateMachineDef state_machine_def_;
   sub_states_list_t sub_states_;
+  transition_entries_t transitions_ = construct_transition_entries(static_cast<transition_table*>(nullptr));
 };
 
 /**
@@ -182,6 +184,8 @@ class state_machine {
  *  is_start_ = true;
  *  current_ = initial_state
  *  执行一次子状态机的进入
+ * 
+ * TODOLIST: 1) 测试用例、 2）伪状态支持 + 测试用例， 3）
  */
 
 } // namespace hfsm
