@@ -47,14 +47,14 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
-      - name: Configure install test
+      - name: Consumer install test
         run: |
-          cmake --install build --prefix "${{github.workflow}}/install"
+          cmake --install build --prefix "${{github.workspace}}/install"
 
           cmake \
             -S tests/consumer \
             -B consumer-build \
-            -DCMAKE_PREFIX_PATH="${{github.workflow}}/install"
+            -DCMAKE_PREFIX_PATH="${{github.workspace}}/install"
 
           cmake --build consumer-build --parallel
 
