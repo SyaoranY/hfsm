@@ -102,6 +102,17 @@ protected:
 // Initial state
 // ============================================================
 
+TEST_F(SingleLevelStateMachineTest, StartTwice) {
+    hfsm::state_machine<MediaPlayer> sm;
+    sm.start();
+    EXPECT_THROW(sm.start(), std::logic_error);
+}
+
+TEST_F(SingleLevelStateMachineTest, StepBeforeStart) {
+    hfsm::state_machine<MediaPlayer> sm;
+    EXPECT_THROW(sm.step(), std::logic_error);
+}
+
 TEST_F(SingleLevelStateMachineTest, StartsFromInitialState) {
     hfsm::state_machine<MediaPlayer> sm;
 
