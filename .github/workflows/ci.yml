@@ -30,22 +30,37 @@ jobs:
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER=gcc \
-            -DCMAKE_CXX_COMPILER=g++
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DHFSM_BUILD_TESTS=ON \
+            -DHFSM_BUILD_EXAMPLES=ON
 
       - name: Configure Clang
         if: matrix.compiler == 'clang'
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_CXX_COMPILER=clang++
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DHFSM_BUILD_TESTS=ON \
+            -DHFSM_BUILD_EXAMPLES=ON
 
       - name: Build
         run: cmake --build build --parallel
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  consumer-install-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Configure minimal build
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DHFSM_BUILD_TESTS=OFF \
+            -DHFSM_BUILD_EXAMPLES=OFF
 
       - name: Consumer install test
         run: |

@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.20)
 
 project(hfsm VERSION 0.1.0 LANGUAGES CXX)
 
+
+option(HFSM_BUILD_TESTS "Build all of hfsm's own tests." OFF)
+
+option(HFSM_BUILD_EXAMPLES "Build hfsm's example programs." OFF)
+
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
@@ -17,9 +23,8 @@ target_include_directories(
 
 target_compile_features(hfsm INTERFACE cxx_std_14)
 
-include(CTest)
-
-if (BUILD_TESTING)
+if (HFSM_BUILD_TESTS)
+  enable_testing()
   include(FetchContent)
   # GoogleTest is only a test dependency of hfsm.
   # Do not install gtest/gmock together with hfsm.
@@ -53,6 +58,9 @@ if (BUILD_TESTING)
   
 endif()
 
+if(HFSM_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
 # ------------------------------------------------------------
 # Install library
