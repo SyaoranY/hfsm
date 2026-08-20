@@ -46,3 +46,16 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+      - name: Configure install test
+        run: |
+          cmake --install build --prefix "${{github.workflow}}/install"
+
+          cmake \
+            -S tests/consumer \
+            -B consumer-build \
+            -DCMAKE_PREFIX_PATH="${{github.workflow}}/install"
+
+          cmake --build consumer-build --parallel
+
+          ./consumer-build/hfsm_consumer
