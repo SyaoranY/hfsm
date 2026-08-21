@@ -1,0 +1,14 @@
+@startuml pseudo-state
+
+hide empty description
+
+[*] --> Idle
+
+Idle --> Decision : should_start / enter_decision
+
+state Decision <<choice>>
+
+Decision --> FastRunning : should_run_fast / start_fast
+Decision --> SlowRunning : should_run_slow / start_slow
+
+@enduml

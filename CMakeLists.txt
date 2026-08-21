@@ -55,7 +55,10 @@ if (HFSM_BUILD_TESTS)
   add_hfsm_test(test_hierarchical_state_machine tests/test_hierarchical_state_machine.cpp)
   add_hfsm_test(test_simple_single_level_state_machine tests/test_simple_single_level_state_machine.cpp)
   add_hfsm_test(test_three_level_state_machine tests/test_three_level_state_machine.cpp)
-  
+  add_hfsm_test(test_single_level_state_machine_with_pseudo_state tests/test_single_level_state_machine_with_pseudo_state.cpp)
+  add_hfsm_test(test_pseudo_state tests/test_pseudo_state.cpp)
+  add_hfsm_test(test_pseudo_state2 tests/test_pseudo_state2.cpp)
+
   add_subdirectory(tests/compile_fail)
 endif()
 

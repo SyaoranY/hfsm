@@ -7,6 +7,7 @@
 namespace hfsm {
 
 struct normal_state_tag {};
+struct pseudo_state_tag {};
 struct state_machine_frontend_tag {};
 struct state_machine_backend_tag {};
 
@@ -15,6 +16,14 @@ struct state {
     using state_flag = normal_state_tag;
     void on_entry() {}
     void on_update() {}
+    void on_exit() {}
+};
+
+template<typename Derived>
+struct pseudo_state {
+    using state_flag = pseudo_state_tag;
+    void on_entry() {}
+    void on_update() {} // on_update never be called
     void on_exit() {}
 };
 
@@ -27,6 +36,7 @@ template<typename State>
 struct is_state<State, hfsm::mpl::mp_void<typename State::state_flag>>
     : hfsm::mpl::mp_bool<
           std::is_same<typename State::state_flag, normal_state_tag>::value ||
+          std::is_same<typename State::state_flag, pseudo_state_tag>::value ||
           std::is_same<typename State::state_flag, state_machine_frontend_tag>::value ||
           std::is_same<typename State::state_flag, state_machine_backend_tag>::value> {};
 

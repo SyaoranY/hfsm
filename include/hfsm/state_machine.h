@@ -68,6 +68,7 @@ private:
         current_ = initial_state::enum_value;
         state_machine_def_.on_entry();
         do_sub_state_entry(current_);
+        resolve_pseudo_states();
     }
 
     // as a sub state machine
@@ -93,6 +94,11 @@ private:
 
     template<typename StateEntry>
     struct sub_state_transform<StateEntry, normal_state_tag> {
+        using type = StateEntry;
+    };
+
+    template<typename StateEntry>
+    struct sub_state_transform<StateEntry, pseudo_state_tag> {
         using type = StateEntry;
     };
 
@@ -129,6 +135,29 @@ private:
             std::is_same<typename StateEntry::state_type, state_machine<State>>::value>;
     };
 
+    template<typename StateEntry>
+    static constexpr bool is_pseudo_state_entry(StateEntry const&, pseudo_state_tag) {
+        return true;
+    }
+
+    template<typename StateEntry, typename Tag>
+    static constexpr bool is_pseudo_state_entry(StateEntry const&, Tag) {
+        return false;
+    }
+
+    bool is_pseudo_state(enum_type state) const {
+        bool result = false;
+        hfsm::mpl::tuple_visit_if(
+            sub_states_,
+            [state](auto const& state_entry) {return state_entry.enum_value == state; },
+            [&result](auto const& state_entry) {
+                using state_entry_t = typename std::decay<decltype(state_entry)>::type;
+                result = is_pseudo_state_entry(state_entry, typename state_entry_t::state_flag{});
+            }
+        );
+        return result;
+    }
+
     bool find_available_transition(transition_entry_t& trans) {
         for (auto const& trans_entry : transitions_) {
             if (trans_entry.source == current_ && (state_machine_def_.*trans_entry.guard)()) {
@@ -140,11 +169,32 @@ private:
     }
 
     void do_transition(transition_entry_t const& trans) {
+        do_transition_once(trans);
+        resolve_pseudo_states();
+    }
+
+    void do_transition_once(transition_entry_t const& trans) {
         do_sub_state_exit(trans.source);
         (state_machine_def_.*trans.action)();
-        do_sub_state_entry(trans.target);
         current_ = trans.target;
+        do_sub_state_entry(trans.target);
     }
+
+    void resolve_pseudo_states() {
+        std::size_t transition_count = 0;
+
+        while (is_pseudo_state(current_)) {
+            if (++transition_count > tt_size) {
+                throw std::logic_error("pseudo state transition cycle detected");
+            }
+            transition_entry_t trans;
+            if (!find_available_transition(trans)) {
+                throw std::logic_error("pseudo state has no available outgoing transition");
+            }
+            do_transition_once(trans);
+        }
+    }
+
 
     void do_sub_state_exit(enum_type const source) {
         hfsm::mpl::tuple_visit_if(
