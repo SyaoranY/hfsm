@@ -5,10 +5,10 @@
 BasedOnStyle: LLVM
 
 # Indentation
-IndentWidth: 4
+IndentWidth: 2
 UseTab: Never
 NamespaceIndentation: None
-AccessModifierOffset: -4
+AccessModifierOffset: -1
 
 # Line length
 ColumnLimit: 120
@@ -34,7 +34,7 @@ AllowAllParametersOfDeclarationOnNextLine: false
 
 # Constructor initializers
 BreakConstructorInitializers: BeforeComma
-ConstructorInitializerIndentWidth: 4
+ConstructorInitializerIndentWidth: 2
 PackConstructorInitializers: Never
 
 # Short functions (allow inline getters)
