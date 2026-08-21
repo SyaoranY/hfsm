@@ -12,7 +12,7 @@ template<typename StateMachineDef>
 class state_machine {
     static_assert(
         detail::is_derived_from_state_machine_def<StateMachineDef>::value,
-        "StateMachineDef must be derived from state_machine_def"
+        "template parameter must be derived from state_machine_def"
     );
 
 public:
@@ -51,7 +51,10 @@ public:
 
     template<typename T>
     auto& get_state() {
-        constexpr size_t index = hfsm::mpl::mp_find_if<sub_states_list_t, state_match<T>::template pred>::value;
+        using hfsm::mpl::mp_find_if;
+        using hfsm::mpl::mp_size;
+        constexpr size_t index = mp_find_if<sub_states_list_t, state_match<T>::template pred>::value;
+        static_assert(index < mp_size<sub_states_list_t>::value, "template parameter T must be a valid state type");
         return std::get<index>(sub_states_);
     }
 

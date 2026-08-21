@@ -214,11 +214,11 @@ TEST_F(ThreeLevelStateMachineTest, StartsNestedInitialStateMachinesRecursively) 
 
     EXPECT_EQ(sm.current_state(), Level1State::Level2);
 
-    auto& level2 = sm.template get_state<Level2Machine>();
+    auto& level2 = sm.get_state<Level2Machine>();
 
     EXPECT_EQ(level2.current_state(), Level2State::Level3);
 
-    auto& level3 = level2.template get_state<Level3Machine>();
+    auto& level3 = level2.get_state<Level3Machine>();
 
     EXPECT_EQ(level3.current_state(), Level3State::Idle);
 }

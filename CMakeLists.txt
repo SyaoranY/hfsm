@@ -56,6 +56,7 @@ if (HFSM_BUILD_TESTS)
   add_hfsm_test(test_simple_single_level_state_machine tests/test_simple_single_level_state_machine.cpp)
   add_hfsm_test(test_three_level_state_machine tests/test_three_level_state_machine.cpp)
   
+  add_subdirectory(tests/compile_fail)
 endif()
 
 if(HFSM_BUILD_EXAMPLES)

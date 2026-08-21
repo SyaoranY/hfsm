@@ -196,7 +196,7 @@ TEST_F(HierarchicalStateMachineTest, StartsAutonomousFromStandbyWhenEnteringAuto
 
     EXPECT_EQ(sm.current_state(), VehicleState::Autonomous);
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     EXPECT_EQ(autonomous.current_state(), AutonomousState::Standby);
 }
@@ -220,7 +220,7 @@ TEST_F(HierarchicalStateMachineTest, AutonomousTransitionsFromStandbyToCruising)
     context.autonomous_ready = true;
     sm.step();
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     EXPECT_EQ(sm.current_state(), VehicleState::Autonomous);
     EXPECT_EQ(autonomous.current_state(), AutonomousState::Cruising);
@@ -249,7 +249,7 @@ TEST_F(HierarchicalStateMachineTest, AutonomousTransitionsFromCruisingToFollowin
     context.vehicle_ahead = true;
     sm.step();
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     EXPECT_EQ(autonomous.current_state(), AutonomousState::Following);
 }
@@ -280,7 +280,7 @@ TEST_F(HierarchicalStateMachineTest, AutonomousTransitionsFromFollowingBackToCru
     context.vehicle_ahead = false;
     sm.step();
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     EXPECT_EQ(autonomous.current_state(), AutonomousState::Cruising);
 }
@@ -304,7 +304,7 @@ TEST_F(HierarchicalStateMachineTest, AutonomousPerformsLaneChange) {
     context.autonomous_ready = true;
     sm.step();
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     EXPECT_EQ(autonomous.current_state(), AutonomousState::Cruising);
 
@@ -344,7 +344,7 @@ TEST_F(HierarchicalStateMachineTest, AutonomousTransitionsFromCruisingToParking)
     context.parking_requested = true;
     sm.step();
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     EXPECT_EQ(autonomous.current_state(), AutonomousState::Parking);
 }
@@ -375,7 +375,7 @@ TEST_F(HierarchicalStateMachineTest, AutonomousTransitionsFromFollowingToParking
     context.parking_requested = true;
     sm.step();
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     EXPECT_EQ(autonomous.current_state(), AutonomousState::Parking);
 }
@@ -407,7 +407,7 @@ TEST_F(HierarchicalStateMachineTest, AutonomousReturnsToStandbyAfterParking) {
     context.parking_completed = true;
     sm.step();
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     EXPECT_EQ(autonomous.current_state(), AutonomousState::Standby);
 }
@@ -456,7 +456,7 @@ TEST_F(HierarchicalStateMachineTest, ExitsAutonomousWhileChildIsCruising) {
     context.autonomous_ready = true;
     sm.step();
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     EXPECT_EQ(autonomous.current_state(), AutonomousState::Cruising);
 
@@ -495,7 +495,7 @@ TEST_F(HierarchicalStateMachineTest, ParentTransitionToEmergencyOverridesNestedS
     context.vehicle_ahead = true;
     sm.step();
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     EXPECT_EQ(autonomous.current_state(), AutonomousState::Following);
 
@@ -557,7 +557,7 @@ TEST_F(HierarchicalStateMachineTest, ExecutesCompleteHierarchicalStateSequence) 
     hfsm::state_machine<Vehicle> sm;
     sm.start();
 
-    auto& autonomous = sm.template get_state<Autonomous>();
+    auto& autonomous = sm.get_state<Autonomous>();
 
     // Off
     EXPECT_EQ(sm.current_state(), VehicleState::Off);
