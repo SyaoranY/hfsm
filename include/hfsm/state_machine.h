@@ -8,6 +8,18 @@
 
 namespace hfsm {
 
+/**
+ * @brief Runtime backend for a hierarchical finite state machine.
+ *
+ * The state machine has a one-shot lifetime. start() initializes the machine
+ * and may only be called once. After startup, step() advances the active
+ * hierarchy one update at a time.
+ *
+ * Nested state-machine definitions are instantiated automatically when they
+ * appear as states in the transition table.
+ *
+ * @tparam StateMachineDef A type derived from state_machine_def.
+ */
 template<typename StateMachineDef>
 class state_machine {
   static_assert(
@@ -26,6 +38,17 @@ class state_machine {
   static constexpr std::size_t tt_size = hfsm::mpl::mp_size<transition_table>::value;
   using transition_entries_t = std::array<transition_entry_t, tt_size>;
 
+  /**
+   * @brief Starts the state machine.
+   *
+   * Sets the current state to the configured initial state, invokes the
+   * machine-level on_entry() callback, enters the initial state, and resolves
+   * any pseudo states encountered during startup.
+   *
+   * start() may only be called once during the lifetime of the machine.
+   *
+   * @throws std::logic_error If the state machine has already been started.
+   */
   void start() {
     if (is_started_) {
       throw std::logic_error("start() cannot be called twice");
@@ -35,6 +58,24 @@ class state_machine {
     on_entry();
   }
 
+  /**
+   * @brief Advances the state machine by one update.
+   *
+   * The machine-level on_update() callback is invoked first. Transitions whose
+   * source is the current state are then evaluated in transition-table order.
+   * The first transition whose guard evaluates to true is taken.
+   *
+   * If a transition is taken at this machine level, the update is not
+   * propagated to the active substate. Otherwise, the active substate receives
+   * its on_update() callback. For a nested state machine, this recursively
+   * updates its active hierarchy.
+   *
+   * Any pseudo states entered by a transition are resolved immediately.
+   *
+   * @throws std::logic_error If the state machine has not been started.
+   * @throws std::logic_error If a pseudo state has no available outgoing
+   *         transition or a pseudo-state transition cycle is detected.
+   */
   void step() {
     if (!is_started_) {
       throw std::logic_error("step() cannot be called before start()");
@@ -48,10 +89,37 @@ class state_machine {
     }
   }
 
+  /**
+   * @brief Returns the currently active state.
+   *
+   * @pre The state machine must have been started with start().
+   *
+   * Calling this function before start() violates the API contract.
+   *
+   * @return Enumeration value of the currently active state.
+   */
   enum_type current_state() const noexcept { return current_; }
 
+  /**
+   * @brief Checks whether the state machine has been started.
+   *
+   * Once started, a state machine remains started for the rest of its lifetime.
+   *
+   * @return true if start() has been called; otherwise false.
+   */
   bool is_started() const noexcept { return is_started_; }
 
+  /**
+   * @brief Returns the stored instance of a state.
+   *
+   * For a nested state machine, the corresponding state_machine instance is
+   * returned.
+   *
+   * The requested type must belong to this state machine.
+   *
+   * @tparam T State type or nested state-machine definition type.
+   * @return Reference to the stored state instance.
+   */
   template<typename T>
   auto& get_state() {
     using hfsm::mpl::mp_find_if;
