@@ -59,7 +59,7 @@ if (HFSM_BUILD_TESTS)
   add_hfsm_test(test_pseudo_state tests/test_pseudo_state.cpp)
   add_hfsm_test(test_pseudo_state2 tests/test_pseudo_state2.cpp)
   add_hfsm_test(test_initial_state_not_in_transition_table tests/test_initial_state_not_in_transition_table.cpp)
-
+  add_hfsm_test(test_state_machine_lifecycle tests/test_state_machine_lifecycle.cpp)
   add_subdirectory(tests/compile_fail)
 endif()
 

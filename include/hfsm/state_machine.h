@@ -38,7 +38,8 @@ class state_machine {
   void step() {
     if (!is_started_) {
       throw std::logic_error("step() cannot be called before start()");
-    }
+    }  
+    state_machine_def_.on_update();
     transition_entry_t trans;
     if (find_available_transition(trans)) {
       do_transition(trans);
@@ -82,7 +83,6 @@ class state_machine {
 
   // as a sub state machine
   void on_update() {
-    state_machine_def_.on_update();
     step();
   }
 

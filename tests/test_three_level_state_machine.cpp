@@ -277,19 +277,14 @@ TEST_F(ThreeLevelStateMachineTest, CallsOnUpdateRecursively) {
 
   sm.step();
 
-  // According to the current implementation:
-  //
-  // Level1Machine backend::step()
-  //   -> Level2Machine::on_update()
-  //        -> Level2 backend::step()
-  //             -> Level3Machine::on_update()
-  //                  -> Level3 backend::step()
-  //                       -> Idle::on_update()
-  //
-  // Level1Machine::on_update() itself is not called by the
-  // top-level sm.step().
+// A step updates the active hierarchy from outer to inner:
+//
+// Level1Machine::on_update()
+//   -> Level2Machine::on_update()
+//        -> Level3Machine::on_update()
+//             -> Idle::on_update()
 
-  EXPECT_EQ(context.level1_update_count, 0);
+  EXPECT_EQ(context.level1_update_count, 1);
   EXPECT_EQ(context.level2_update_count, 1);
   EXPECT_EQ(context.level3_update_count, 1);
   EXPECT_EQ(context.idle_update_count, 1);
@@ -299,7 +294,7 @@ TEST_F(ThreeLevelStateMachineTest, CallsOnUpdateRecursively) {
 // on_update order
 // ============================================================
 
-TEST_F(ThreeLevelStateMachineTest, CallsOnUpdateFromOuterSubStateToInnerState) {
+TEST_F(ThreeLevelStateMachineTest, CallsOnUpdateFromOuterToInner) {
   hfsm::state_machine<Level1Machine> sm;
 
   sm.start();
@@ -308,7 +303,12 @@ TEST_F(ThreeLevelStateMachineTest, CallsOnUpdateFromOuterSubStateToInnerState) {
 
   sm.step();
 
-  const std::vector<std::string> expected = {"Level2Machine::on_update", "Level3Machine::on_update", "Idle::on_update"};
+  const std::vector<std::string> expected = {
+      "Level1Machine::on_update",
+      "Level2Machine::on_update",
+      "Level3Machine::on_update",
+      "Idle::on_update"
+  };
 
   EXPECT_EQ(context.events, expected);
 }
@@ -356,6 +356,7 @@ TEST_F(ThreeLevelStateMachineTest, CallsOnExitFromInnerToOuter) {
   sm.step();
 
   const std::vector<std::string> expected = {
+      "Level1Machine::on_update",
       "Idle::on_exit",
       "Level3Machine::on_exit",
       "Level2Machine::on_exit",
@@ -390,6 +391,7 @@ TEST_F(ThreeLevelStateMachineTest, ExecutesNestedEntryUpdateAndExitLifecycle) {
 
   sm.step();
 
+  EXPECT_EQ(context.level1_update_count, 1);
   EXPECT_EQ(context.level2_update_count, 1);
   EXPECT_EQ(context.level3_update_count, 1);
   EXPECT_EQ(context.idle_update_count, 1);
@@ -402,9 +404,13 @@ TEST_F(ThreeLevelStateMachineTest, ExecutesNestedEntryUpdateAndExitLifecycle) {
 
   sm.step();
 
-  EXPECT_EQ(context.idle_exit_count, 1);
-  EXPECT_EQ(context.level3_exit_count, 1);
-  EXPECT_EQ(context.level2_exit_count, 1);
+  EXPECT_EQ(context.level1_update_count, 2);
+
+  // The Level1 transition is taken before the update is propagated
+  // to the nested state machines.
+  EXPECT_EQ(context.level2_update_count, 1);
+  EXPECT_EQ(context.level3_update_count, 1);
+  EXPECT_EQ(context.idle_update_count, 1);
 
   EXPECT_EQ(sm.current_state(), Level1State::Done);
 
