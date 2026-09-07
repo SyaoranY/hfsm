@@ -25,6 +25,10 @@ class state_machine {
       detail::is_derived_from_state_machine_def<StateMachineDef>::value,
       "template parameter must be derived from state_machine_def"
   );
+  static_assert(
+      std::is_default_constructible<StateMachineDef>::value,
+      "state machine definition must be default constructible"
+  );
 
  public:
   using state_flag = state_machine_backend_tag;
@@ -191,6 +195,11 @@ class state_machine {
   };
 
   using sub_states_list_t = typename sub_states_list<transition_table>::type;
+
+  static_assert(
+      std::is_default_constructible<sub_states_list_t>::value,
+      "all states and nested state machines must be default constructible"
+  );
 
   template<typename State>
   struct state_match {

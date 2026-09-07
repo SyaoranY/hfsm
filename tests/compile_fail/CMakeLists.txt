@@ -61,3 +61,19 @@ add_hfsm_compile_fail_test(
   EXPECTED_ERROR
     "transition_table"
 )
+
+add_hfsm_compile_fail_test(
+  compile_fail_non_default_constructible_machine_def
+  SOURCES 
+    compile_fail_non_default_constructible_machine_def.cpp
+  EXPECTED_ERROR
+    "state machine definition must be default constructible"
+)
+
+add_hfsm_compile_fail_test(
+  compile_fail_non_default_constructible_state
+  SOURCES 
+    compile_fail_non_default_constructible_state.cpp
+  EXPECTED_ERROR
+    "all states and nested state machines must be default constructible"
+)
