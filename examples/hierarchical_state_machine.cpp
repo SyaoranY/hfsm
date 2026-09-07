@@ -1,145 +1,223 @@
 #include <hfsm/state_machine.h>
 #include <hfsm/state_machine_def.h>
-#include <thread>
 
-// context
+#include <iostream>
+
 struct VehicleContext {
-    void reset() {
-        power_on = false;
-        engage_autonomous = false;
-        disengage_autonomous = false;
-        system_fault = false;
-        reset_requested = false;
-
-        autonomous_ready = false;
-        vehicle_ahead = false;
-        lane_change_requested = false;
-        lane_change_completed = false;
-        parking_requested = false;
-        parking_completed = false;
-    }
-
     bool power_on{false};
     bool engage_autonomous{false};
     bool disengage_autonomous{false};
-    bool system_fault{false};
-    bool reset_requested{false};
 
     bool autonomous_ready{false};
-    bool vehicle_ahead{false};
-    bool lane_change_requested{false};
-    bool lane_change_completed{false};
     bool parking_requested{false};
     bool parking_completed{false};
 };
 
 VehicleContext context;
 
-// sub state machine  Autonomous
-enum class AutonomousState { Standby, Cruising, Following, LaneChanging, Parking };
+// -----------------------------------------------------------------------------
+// Autonomous sub state machine
+// -----------------------------------------------------------------------------
 
-struct Standby : hfsm::state<Standby> {};
-struct Cruising : hfsm::state<Cruising> {};
-struct Following : hfsm::state<Following> {};
-struct LaneChanging : hfsm::state<LaneChanging> {};
-struct Parking : hfsm::state<Parking> {};
+enum class AutonomousState {
+    Standby,
+    Cruising,
+    Parking,
+};
 
-struct Autonomous : hfsm::state_machine_def<Autonomous, AutonomousState> {
-    using StandbyState = state_entry<Standby, AutonomousState::Standby>;
-    using CruisingState = state_entry<Cruising, AutonomousState::Cruising>;
-    using FollowingState = state_entry<Following, AutonomousState::Following>;
-    using LaneChangingState = state_entry<LaneChanging, AutonomousState::LaneChanging>;
-    using ParkingState = state_entry<Parking, AutonomousState::Parking>;
+struct Standby : hfsm::state<Standby> {
+    void on_entry() { std::cout << "  enter Standby\n"; }
+    void on_update() { std::cout << "  update Standby\n"; }
+    void on_exit() { std::cout << "  exit Standby\n"; }
+};
 
-    bool can_start_cruising() { return context.autonomous_ready; }
+struct Cruising : hfsm::state<Cruising> {
+    void on_entry() { std::cout << "  enter Cruising\n"; }
+    void on_update() { std::cout << "  update Cruising\n"; }
+    void on_exit() { std::cout << "  exit Cruising\n"; }
+};
 
-    bool vehicle_ahead() { return context.vehicle_ahead; }
+struct Parking : hfsm::state<Parking> {
+    void on_entry() { std::cout << "  enter Parking\n"; }
+    void on_update() { std::cout << "  update Parking\n"; }
+    void on_exit() { std::cout << "  exit Parking\n"; }
+};
 
-    bool road_clear() { return !context.vehicle_ahead; }
+struct Autonomous
+    : hfsm::state_machine_def<Autonomous, AutonomousState> {
+    using StandbyState =
+        state_entry<Standby, AutonomousState::Standby>;
 
-    bool lane_change_requested() { return context.lane_change_requested; }
+    using CruisingState =
+        state_entry<Cruising, AutonomousState::Cruising>;
 
-    bool lane_change_completed() { return context.lane_change_completed; }
+    using ParkingState =
+        state_entry<Parking, AutonomousState::Parking>;
 
-    bool parking_requested() { return context.parking_requested; }
+    bool can_start_cruising() {
+        return context.autonomous_ready;
+    }
 
-    bool parking_completed() { return context.parking_completed; }
+    bool should_park() {
+        return context.parking_requested;
+    }
 
-    void start_cruising() {}
-    void start_following() {}
-    void resume_cruising() {}
-    void start_lane_change() {}
-    void finish_lane_change() {}
-    void start_parking() {}
-    void finish_parking() {}
+    bool parking_done() {
+        return context.parking_completed;
+    }
+
+    void start_cruising() {
+        std::cout << "  action: start cruising\n";
+    }
+
+    void start_parking() {
+        std::cout << "  action: start parking\n";
+    }
+
+    void finish_parking() {
+        std::cout << "  action: finish parking\n";
+    }
+
+    void on_entry() {
+        std::cout << "enter Autonomous state machine\n";
+    }
+
+    void on_exit() {
+        std::cout << "exit Autonomous state machine\n";
+    }
 
     using initial_state = StandbyState;
 
     using transition_table = std::tuple<
-        transition<StandbyState, CruisingState, &Autonomous::can_start_cruising, &Autonomous::start_cruising>,
-        transition<CruisingState, FollowingState, &Autonomous::vehicle_ahead, &Autonomous::start_following>,
-        transition<FollowingState, CruisingState, &Autonomous::road_clear, &Autonomous::resume_cruising>,
+        transition<
+            StandbyState,
+            CruisingState,
+            &Autonomous::can_start_cruising,
+            &Autonomous::start_cruising>,
         transition<
             CruisingState,
-            LaneChangingState,
-            &Autonomous::lane_change_requested,
-            &Autonomous::start_lane_change>,
+            ParkingState,
+            &Autonomous::should_park,
+            &Autonomous::start_parking>,
         transition<
-            LaneChangingState,
-            CruisingState,
-            &Autonomous::lane_change_completed,
-            &Autonomous::finish_lane_change>,
-        transition<CruisingState, ParkingState, &Autonomous::parking_requested, &Autonomous::start_parking>,
-        transition<FollowingState, ParkingState, &Autonomous::parking_requested, &Autonomous::start_parking>,
-        transition<ParkingState, StandbyState, &Autonomous::parking_completed, &Autonomous::finish_parking>>;
+            ParkingState,
+            StandbyState,
+            &Autonomous::parking_done,
+            &Autonomous::finish_parking>>;
 };
 
-// top state machine
-enum class VehicleState { Off, Manual, Autonomous, Emergency };
+// -----------------------------------------------------------------------------
+// Root state machine
+// -----------------------------------------------------------------------------
 
-struct Off : hfsm::state<Off> {};
-struct Manual : hfsm::state<Manual> {};
-struct Emergency : hfsm::state<Emergency> {};
+enum class VehicleState {
+    Off,
+    Manual,
+    Autonomous,
+};
+
+struct Off : hfsm::state<Off> {
+    void on_entry() { std::cout << "enter Off\n"; }
+    void on_exit() { std::cout << "exit Off\n"; }
+};
+
+struct Manual : hfsm::state<Manual> {
+    void on_entry() { std::cout << "enter Manual\n"; }
+    void on_update() { std::cout << "update Manual\n"; }
+    void on_exit() { std::cout << "exit Manual\n"; }
+};
 
 struct Vehicle : hfsm::state_machine_def<Vehicle, VehicleState> {
-    using OffState = state_entry<Off, VehicleState::Off>;
-    using ManualState = state_entry<Manual, VehicleState::Manual>;
-    using AutonomousStateRef = state_entry<Autonomous, VehicleState::Autonomous>;
-    using EmergencyState = state_entry<Emergency, VehicleState::Emergency>;
+    using OffState =
+        state_entry<Off, VehicleState::Off>;
 
-    bool power_on() { return context.power_on; }
-    bool engage_autonomous() { return context.engage_autonomous; }
-    bool disengage_autonomous() { return context.disengage_autonomous; }
-    bool system_fault() { return context.system_fault; }
-    bool reset_requested() { return context.reset_requested; }
+    using ManualState =
+        state_entry<Manual, VehicleState::Manual>;
 
-    void start_manual() {}
-    void start_autonomous() {}
-    void stop_autonomous() {}
-    void enter_emergency() {}
-    void reset_vehicle() {}
+    using AutonomousStateRef =
+        state_entry<Autonomous, VehicleState::Autonomous>;
+
+    bool should_power_on() {
+        return context.power_on;
+    }
+
+    bool should_engage_autonomous() {
+        return context.engage_autonomous;
+    }
+
+    bool should_disengage_autonomous() {
+        return context.disengage_autonomous;
+    }
+
+    void power_on() {
+        std::cout << "action: power on\n";
+    }
+
+    void engage_autonomous() {
+        std::cout << "action: engage autonomous mode\n";
+    }
+
+    void disengage_autonomous() {
+        std::cout << "action: disengage autonomous mode\n";
+    }
 
     using initial_state = OffState;
 
     using transition_table = std::tuple<
-        transition<OffState, ManualState, &Vehicle::power_on, &Vehicle::start_manual>,
-        transition<ManualState, AutonomousStateRef, &Vehicle::engage_autonomous, &Vehicle::start_autonomous>,
-        transition<AutonomousStateRef, ManualState, &Vehicle::disengage_autonomous, &Vehicle::stop_autonomous>,
-        transition<ManualState, EmergencyState, &Vehicle::system_fault, &Vehicle::enter_emergency>,
-        transition<AutonomousStateRef, EmergencyState, &Vehicle::system_fault, &Vehicle::enter_emergency>,
-        transition<EmergencyState, OffState, &Vehicle::reset_requested, &Vehicle::reset_vehicle>>;
+        transition<
+            OffState,
+            ManualState,
+            &Vehicle::should_power_on,
+            &Vehicle::power_on>,
+        transition<
+            ManualState,
+            AutonomousStateRef,
+            &Vehicle::should_engage_autonomous,
+            &Vehicle::engage_autonomous>,
+        transition<
+            AutonomousStateRef,
+            ManualState,
+            &Vehicle::should_disengage_autonomous,
+            &Vehicle::disengage_autonomous>>;
 };
 
+int main() {
+    hfsm::state_machine<Vehicle> sm;
 
+    std::cout << "start\n";
+    sm.start();
 
-int main(int argc, char* argv[]) {
-  (void)argc;
-  (void)argv;
-  hfsm::state_machine<Vehicle> sm;
-  sm.start();
-  while (true) {
+    std::cout << "\npower on\n";
+    context.power_on = true;
     sm.step();
-    std::this_thread::sleep_for(std::chrono::milliseconds{100});
-  }
-  return 0;
+    context.power_on = false;
+
+    std::cout << "\nengage autonomous mode\n";
+    context.engage_autonomous = true;
+    sm.step();
+    context.engage_autonomous = false;
+
+    std::cout << "\nautonomous system ready\n";
+    context.autonomous_ready = true;
+    sm.step();
+    context.autonomous_ready = false;
+
+    std::cout << "\nrequest parking\n";
+    context.parking_requested = true;
+    sm.step();
+    context.parking_requested = false;
+
+    std::cout << "\nparking completed\n";
+    context.parking_completed = true;
+    sm.step();
+    context.parking_completed = false;
+
+    std::cout << "\nno transition\n";
+    sm.step();
+
+    std::cout << "\ndisengage autonomous mode\n";
+    context.disengage_autonomous = true;
+    sm.step();
+
+    return 0;
 }
