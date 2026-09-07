@@ -123,7 +123,7 @@ class state_machine {
     using source_state_entry_list = hfsm::mpl::mp_list<typename Trans::source_state_entry_t...>;
     using target_state_entry_list = hfsm::mpl::mp_list<typename Trans::target_state_entry_t...>;
     using state_entry_list =
-        hfsm::mpl::mp_set_union<hfsm::mpl::mp_list<>, source_state_entry_list, target_state_entry_list>;
+        hfsm::mpl::mp_set_union<hfsm::mpl::mp_list<initial_state>, source_state_entry_list, target_state_entry_list>;
     using type = hfsm::mpl::mp_apply<std::tuple, hfsm::mpl::mp_transform<sub_state_transform_t, state_entry_list>>;
   };
 
