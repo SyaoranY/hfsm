@@ -104,7 +104,9 @@ class SingleLevelStateMachineTest : public ::testing::Test {
 
 TEST_F(SingleLevelStateMachineTest, StartTwice) {
   hfsm::state_machine<MediaPlayer> sm;
+  EXPECT_FALSE(sm.is_started());
   sm.start();
+  EXPECT_TRUE(sm.is_started());
   EXPECT_THROW(sm.start(), std::logic_error);
 }
 

@@ -49,6 +49,8 @@ class state_machine {
 
   enum_type current_state() const noexcept { return current_; }
 
+  bool is_started() const noexcept { return is_started_; }
+
   template<typename T>
   auto& get_state() {
     using hfsm::mpl::mp_find_if;
