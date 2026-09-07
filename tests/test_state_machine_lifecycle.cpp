@@ -54,9 +54,7 @@ struct ChildMachine : hfsm::state_machine_def<ChildMachine, ChildState> {
   using IdleState = state_entry<ChildIdle, ChildState::Idle>;
   using ActiveState = state_entry<ChildActive, ChildState::Active>;
 
-  void on_entry() {
-    ++lifecycle_context.child_entry_count;
-  }
+  void on_entry() { ++lifecycle_context.child_entry_count; }
 
   void on_update() {
     ++lifecycle_context.child_update_count;
@@ -66,24 +64,16 @@ struct ChildMachine : hfsm::state_machine_def<ChildMachine, ChildState> {
     }
   }
 
-  void on_exit() {
-    ++lifecycle_context.child_exit_count;
-  }
+  void on_exit() { ++lifecycle_context.child_exit_count; }
 
-  bool should_activate() {
-    return lifecycle_context.child_transition;
-  }
+  bool should_activate() { return lifecycle_context.child_transition; }
 
   void activate() {}
 
   using initial_state = IdleState;
 
-  using transition_table = std::tuple<
-      transition<
-          IdleState,
-          ActiveState,
-          &ChildMachine::should_activate,
-          &ChildMachine::activate>>;
+  using transition_table =
+      std::tuple<transition<IdleState, ActiveState, &ChildMachine::should_activate, &ChildMachine::activate>>;
 };
 
 // -----------------------------------------------------------------------------
@@ -101,9 +91,7 @@ struct RootMachine : hfsm::state_machine_def<RootMachine, RootState> {
   using IdleState = state_entry<RootIdle, RootState::Idle>;
   using ChildStateRef = state_entry<ChildMachine, RootState::Child>;
 
-  void on_entry() {
-    ++lifecycle_context.root_entry_count;
-  }
+  void on_entry() { ++lifecycle_context.root_entry_count; }
 
   void on_update() {
     ++lifecycle_context.root_update_count;
@@ -113,17 +101,11 @@ struct RootMachine : hfsm::state_machine_def<RootMachine, RootState> {
     }
   }
 
-  void on_exit() {
-    ++lifecycle_context.root_exit_count;
-  }
+  void on_exit() { ++lifecycle_context.root_exit_count; }
 
-  bool should_enter_child() {
-    return lifecycle_context.enter_child;
-  }
+  bool should_enter_child() { return lifecycle_context.enter_child; }
 
-  bool should_leave_child() {
-    return lifecycle_context.leave_child;
-  }
+  bool should_leave_child() { return lifecycle_context.leave_child; }
 
   void enter_child() {}
   void leave_child() {}
@@ -131,23 +113,13 @@ struct RootMachine : hfsm::state_machine_def<RootMachine, RootState> {
   using initial_state = IdleState;
 
   using transition_table = std::tuple<
-      transition<
-          IdleState,
-          ChildStateRef,
-          &RootMachine::should_enter_child,
-          &RootMachine::enter_child>,
-      transition<
-          ChildStateRef,
-          IdleState,
-          &RootMachine::should_leave_child,
-          &RootMachine::leave_child>>;
+      transition<IdleState, ChildStateRef, &RootMachine::should_enter_child, &RootMachine::enter_child>,
+      transition<ChildStateRef, IdleState, &RootMachine::should_leave_child, &RootMachine::leave_child>>;
 };
 
 class StateMachineLifecycleTest : public ::testing::Test {
  protected:
-  void SetUp() override {
-    lifecycle_context.reset();
-  }
+  void SetUp() override { lifecycle_context.reset(); }
 };
 
 TEST_F(StateMachineLifecycleTest, StartCallsRootMachineOnEntry) {

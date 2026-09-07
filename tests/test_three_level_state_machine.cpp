@@ -277,12 +277,12 @@ TEST_F(ThreeLevelStateMachineTest, CallsOnUpdateRecursively) {
 
   sm.step();
 
-// A step updates the active hierarchy from outer to inner:
-//
-// Level1Machine::on_update()
-//   -> Level2Machine::on_update()
-//        -> Level3Machine::on_update()
-//             -> Idle::on_update()
+  // A step updates the active hierarchy from outer to inner:
+  //
+  // Level1Machine::on_update()
+  //   -> Level2Machine::on_update()
+  //        -> Level3Machine::on_update()
+  //             -> Idle::on_update()
 
   EXPECT_EQ(context.level1_update_count, 1);
   EXPECT_EQ(context.level2_update_count, 1);
@@ -304,10 +304,7 @@ TEST_F(ThreeLevelStateMachineTest, CallsOnUpdateFromOuterToInner) {
   sm.step();
 
   const std::vector<std::string> expected = {
-      "Level1Machine::on_update",
-      "Level2Machine::on_update",
-      "Level3Machine::on_update",
-      "Idle::on_update"
+      "Level1Machine::on_update", "Level2Machine::on_update", "Level3Machine::on_update", "Idle::on_update"
   };
 
   EXPECT_EQ(context.events, expected);

@@ -15,8 +15,7 @@ namespace hfsm {
  * and may only be called once. After startup, step() advances the active
  * hierarchy one update at a time.
  *
- * Nested state-machine definitions are instantiated automatically when they
- * appear as states in the transition table.
+ * Nested state machines are instantiated automatically and managed recursively.
  *
  * @tparam StateMachineDef A type derived from state_machine_def.
  */
@@ -53,8 +52,6 @@ class state_machine {
     if (is_started_) {
       throw std::logic_error("start() cannot be called twice");
     }
-    is_started_ = true;
-    current_ = initial_state::enum_value;
     on_entry();
   }
 
@@ -79,7 +76,7 @@ class state_machine {
   void step() {
     if (!is_started_) {
       throw std::logic_error("step() cannot be called before start()");
-    }  
+    }
     state_machine_def_.on_update();
     transition_entry_t trans;
     if (find_available_transition(trans)) {
@@ -150,9 +147,7 @@ class state_machine {
   }
 
   // as a sub state machine
-  void on_update() {
-    step();
-  }
+  void on_update() { step(); }
 
   template<template<typename...> class L, typename... Trans>
   static constexpr auto construct_transition_entries(L<Trans...>*) -> transition_entries_t {

@@ -17,8 +17,7 @@ struct Idle : hfsm::state<Idle> {
 int Idle::entry_count = 0;
 int Idle::update_count = 0;
 
-struct SingleStateMachine
-    : hfsm::state_machine_def<SingleStateMachine, SingleState> {
+struct SingleStateMachine : hfsm::state_machine_def<SingleStateMachine, SingleState> {
   using IdleState = state_entry<Idle, SingleState::Idle>;
 
   using initial_state = IdleState;

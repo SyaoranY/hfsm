@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(hfsm VERSION 0.1.0 LANGUAGES CXX)
+project(hfsm VERSION 1.0.0 LANGUAGES CXX)
 
 
 option(HFSM_BUILD_TESTS "Build all of hfsm's own tests." OFF)

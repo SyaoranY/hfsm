@@ -29,14 +29,13 @@ struct IsolatedInitialMachine : hfsm::state_machine_def<IsolatedInitialMachine, 
 
   bool should_stop() { return false; }
 
-  void do_stop() { }
+  void do_stop() {}
 
   using initial_state = IdleState;
 
   // Idle does not appear anywhere in the transition table.
   using transition_table = std::tuple<
-      transition<RunningState, StoppedState, &IsolatedInitialMachine::should_stop, &IsolatedInitialMachine::do_stop>
-  >;
+      transition<RunningState, StoppedState, &IsolatedInitialMachine::should_stop, &IsolatedInitialMachine::do_stop>>;
 };
 
 TEST(StateMachineTest, InitialStateDoesNotNeedToAppearInTransitionTable) {
