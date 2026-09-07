@@ -228,42 +228,6 @@ class state_machine {
   transition_entries_t transitions_ = construct_transition_entries(static_cast<transition_table*>(nullptr));
 };
 
-/**
- * 一、状态机的切换 (Done)
- * 遍历所有source == 当前枚举值的guard，直到有一个guard() -> true,
- * if guard() == true:
- *    执行跳转：source状态的退出，执行action、target状态的进入
- * else (all guard() == false):
- *    执行当前状态的on_update
- *
- * 二、子状态机的退出 (Done)
- * 1）执行当前状态的on_exit
- * 2）执行子状态机前端的on_exit
- * 3）将当前状态设置为初始状态
- *
- * 三、子状态机的进入 (Done)
- *  1）执行子状态机前端的on_entry
- *  2) 执行初始状态的on_entry
- *  3) if 初始状态是伪状态，执行一个子状态机的运行
- *
- * 四、子状态机的on_update (Done)
- *  1) 执行子状态机前端的on_update,
- *  2) 执行一次子状态机的跳转
- */
-
-/**
- * 五、状态机的对象保存 (Done)
- *
- * 六、支持伪状态
- *
- * 七、状态机的启动 (Done)
- *  is_start_ = true;
- *  current_ = initial_state
- *  执行一次子状态机的进入
- *
- * TODOLIST: 1) 测试用例、 2）伪状态支持 + 测试用例， 3）
- */
-
 } // namespace hfsm
 
 #endif /* HFSM_STATE_MACHINE_H_ */
