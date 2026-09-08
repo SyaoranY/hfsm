@@ -61,6 +61,7 @@ if (HFSM_BUILD_TESTS)
   add_hfsm_test(test_initial_state_not_in_transition_table tests/test_initial_state_not_in_transition_table.cpp)
   add_hfsm_test(test_state_machine_lifecycle tests/test_state_machine_lifecycle.cpp)
   add_hfsm_test(test_empty_transition_table tests/test_empty_transition_table.cpp)
+  add_hfsm_test(test_state_machine_copy_move tests/test_state_machine_copy_move.cpp)
   add_subdirectory(tests/compile_fail)
 endif()
 

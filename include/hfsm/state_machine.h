@@ -42,6 +42,52 @@ class state_machine {
   using transition_entries_t = std::array<transition_entry_t, tt_size>;
 
   /**
+   * @brief Constructs an unstarted state machine.
+   *
+   * The complete state hierarchy is default constructed. The initial state is
+   * not entered until start() is called.
+   */
+  state_machine()
+    : is_started_(false)
+    , current_(initial_state::enum_value)
+    , state_machine_def_()
+    , sub_states_()
+    , transitions_(construct_transition_entries(static_cast<transition_table*>(nullptr))) {}
+
+  /**
+   * @brief Copies the complete runtime state-machine snapshot.
+   *
+   * Machine-level and state-level lifecycle callbacks are not invoked.
+   */
+  state_machine(state_machine const&) = default;
+
+  /**
+   * @brief Replaces this machine with a copy of another runtime snapshot.
+   *
+   * Existing runtime state is replaced through normal C++ assignment semantics.
+   * No on_exit() or on_entry() callbacks are invoked.
+   */
+  state_machine& operator=(state_machine const&) = default;
+
+  /**
+   * @brief Moves the complete runtime state-machine snapshot.
+   *
+   * No lifecycle callbacks are invoked. After the move, the source object's
+   * runtime state is unspecified.
+   */
+  state_machine(state_machine&&) = default;
+
+  /**
+   * @brief Replaces this machine with a moved runtime snapshot.
+   *
+   * No lifecycle callbacks are invoked. After the move, the source object's
+   * runtime state is unspecified.
+   */
+  state_machine& operator=(state_machine&&) = default;
+
+  ~state_machine() = default;
+
+  /**
    * @brief Starts the state machine.
    *
    * Sets the current state to the configured initial state, invokes the
@@ -293,11 +339,11 @@ class state_machine {
     );
   }
 
-  bool is_started_ = false;
+  bool is_started_;
   enum_type current_;
   StateMachineDef state_machine_def_;
   sub_states_list_t sub_states_;
-  transition_entries_t transitions_ = construct_transition_entries(static_cast<transition_table*>(nullptr));
+  transition_entries_t transitions_;
 };
 
 } // namespace hfsm

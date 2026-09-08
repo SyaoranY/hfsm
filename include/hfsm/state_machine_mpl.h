@@ -74,9 +74,7 @@ struct mp_append_impl<L<T...>> {
   using type = L<T...>;
 };
 
-template<template<typename...> class L1, typename... T1,
-         template<typename...> class L2, typename... T2,
-         typename... L>
+template<template<typename...> class L1, typename... T1, template<typename...> class L2, typename... T2, typename... L>
 struct mp_append_impl<L1<T1...>, L2<T2...>, L...> {
   using type = typename mp_append_impl<L1<T1..., T2...>, L...>::type;
 };
@@ -190,9 +188,7 @@ struct mp_set_union_impl<L<T...>> {
   using type = L<T...>;
 };
 
-template<template<typename...> class L1, typename... U1,
-         template<typename...> class L2, typename... U2,
-         typename... L>
+template<template<typename...> class L1, typename... U1, template<typename...> class L2, typename... U2, typename... L>
 struct mp_set_union_impl<L1<U1...>, L2<U2...>, L...> {
   using S = mp_set_push_back<L1<U1...>, U2...>;
   using type = typename mp_set_union_impl<S, L...>::type;
