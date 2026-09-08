@@ -1,0 +1,24 @@
+@startuml Media Player
+
+hide empty description
+
+[*] --> Stopped
+
+Stopped --> Playing : can_play / start_playback
+
+Playing --> Paused : should_pause / pause_playback
+Paused --> Playing : should_resume / resume_playback
+
+Playing --> Stopped : should_stop / stop_playback
+Paused --> Stopped : should_stop / stop_playback
+
+Playing --> Buffering : buffer_empty / start_buffering
+Buffering --> Playing : buffer_ready / resume_playback
+
+Playing --> Error : has_error / handle_error
+Paused --> Error : has_error / handle_error
+Buffering --> Error : has_error / handle_error
+
+Error --> Stopped : should_reset / reset
+
+@enduml
