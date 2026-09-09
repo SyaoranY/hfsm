@@ -1,5 +1,12 @@
 # hfsm
 
+[![CI](https://github.com/SyaoranY/hfsm/actions/workflows/ci.yml/badge.svg)](https://github.com/SyaoranY/hfsm/actions/workflows/ci.yml)
+![C++14](https://img.shields.io/badge/C%2B%2B-14-blue.svg)
+![header-only](https://img.shields.io/badge/header--only-yes-brightgreen.svg)
+![HFSM](https://img.shields.io/badge/type-HFSM-blueviolet.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/SyaoranY/hfsm)](https://github.com/SyaoranY/hfsm/releases)
+
 A small, header-only hierarchical finite state machine library for C++14, designed for fixed-cycle control systems.
 
 `hfsm` favors **strict hierarchy, compile-time structure, deterministic transition priority, and step-driven execution** over a general-purpose event-driven model.
